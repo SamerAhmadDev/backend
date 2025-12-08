@@ -2,6 +2,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { CreateQuizDto } from 'src/quizzes/dto/create-quiz-dto';
+import { UpdateQuizDto } from 'src/quizzes/dto/update-quiz-dto';
 
 export const GetQuizzesDocs = () =>
   applyDecorators(
@@ -42,4 +43,19 @@ export const CreateQuizDocs = () =>
       description: 'Quiz successfully created, returns quiz ID',
     }),
     ApiResponse({ status: 400, description: 'Invalid input' }),
+  );
+
+export const UpdateQuizDocs = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Update an existing quiz with questions and options',
+    }),
+    ApiBody({ type: UpdateQuizDto }),
+    ApiResponse({
+      status: 200,
+      description:
+        'Quiz successfully updated, returns full quiz with relations',
+    }),
+    ApiResponse({ status: 400, description: 'Invalid input' }),
+    ApiResponse({ status: 404, description: 'Quiz not found' }),
   );

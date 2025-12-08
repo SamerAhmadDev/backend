@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -22,7 +23,8 @@ import {
   GetQuizzesDocs,
 } from 'src/docs/quizzes/quizzes.docs';
 import { CreateQuizDto } from './dto/create-quiz-dto';
-import { Quiz } from './entities/quizzes.entity';
+import { UpdateQuizDto } from './dto/update-quiz-dto';
+import { Quiz, QuizWithRelations } from './entities/quizzes.entity';
 import { QuizzesService } from './quizzes.service';
 
 @ApiTags('Admin - Quizzes')
@@ -53,7 +55,9 @@ export class AdminQuizzesController {
   @Roles(UserRole.SuperAdmin)
   @Get(':id')
   @GetQuizByIdDocs()
-  async getQuizById(@Param('id') id: string): Promise<Quiz | null> {
+  async getQuizById(
+    @Param('id') id: string,
+  ): Promise<QuizWithRelations | null> {
     return this.quizzesService.getQuizById(id);
   }
 
@@ -70,5 +74,14 @@ export class AdminQuizzesController {
   async createQuiz(@Body() dto: CreateQuizDto): Promise<{ quizId: string }> {
     const quizId = await this.quizzesService.createQuiz(dto);
     return { quizId };
+  }
+
+  @Roles(UserRole.SuperAdmin)
+  @Patch(':id')
+  async updateQuiz(
+    @Param('id') id: string,
+    @Body() dto: UpdateQuizDto,
+  ): Promise<QuizWithRelations> {
+    return this.quizzesService.updateQuizWithQuestions(id, dto);
   }
 }

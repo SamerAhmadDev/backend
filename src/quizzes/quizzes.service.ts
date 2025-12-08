@@ -1,7 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PaginationOptions, SortOptions } from 'src/common/interfaces';
-import { CreateQuizDto, CreateQuizQuestionDto } from './dto/create-quiz-dto';
-import { Quiz } from './entities/quizzes.entity';
+import { CreateQuizDto } from './dto/create-quiz-dto';
+import { UpdateQuizDto } from './dto/update-quiz-dto';
+import { Quiz, QuizWithRelations } from './entities/quizzes.entity';
 import { QuizzesRepository } from './quizzes.repository';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class QuizzesService {
     return this.quizzesRepository.getQuizzes(pagination, sort, search);
   }
 
-  async getQuizById(id: string): Promise<Quiz | null> {
+  async getQuizById(id: string): Promise<QuizWithRelations | null> {
     return this.quizzesRepository.getQuizById(id);
   }
 
@@ -26,38 +27,62 @@ export class QuizzesService {
 
   async createQuiz(dto: CreateQuizDto): Promise<string> {
     try {
-      const payload = this.buildQuizPayload(dto);
+      const payload = {
+        title: dto.title,
+        passingScore: dto.passingScore ?? undefined,
+        questions: dto.questions.map((q) => ({
+          type: q.type,
+          questionText: q.questionText,
+          options:
+            q.options?.map((o) => ({
+              text: o.text,
+              isCorrect: !!o.isCorrect,
+            })) ?? [],
+        })),
+      };
+
       const quizId = await this.quizzesRepository.createQuiz(payload);
       return quizId;
     } catch (error) {
+      console.error('Service error:', error);
       throw new InternalServerErrorException(
         'Failed to create quiz: ' + error.message,
       );
     }
   }
 
-  private buildQuizPayload(dto: CreateQuizDto) {
-    return {
-      title: dto.title,
-      passing_score: dto.passingScore,
-      questions: dto.questions.map((q: CreateQuizQuestionDto) => {
-        if (q.type === 'true_false') {
-          return {
-            type: 'true_false',
-            question_text: q.questionText,
-            correct_option: q.correctAnswer ? 'True' : 'False',
-          };
-        } else {
-          return {
-            type: q.type,
-            question_text: q.questionText,
-            options: q.options?.map((o) => ({
-              option_text: o.text,
-              is_correct: o.isCorrect,
-            })),
-          };
-        }
-      }),
-    };
+  async updateQuizWithQuestions(
+    id: string,
+    dto: UpdateQuizDto,
+  ): Promise<QuizWithRelations> {
+    try {
+      const payload = {
+        title: dto.title,
+        passingScore: dto.passingScore ?? undefined,
+        questions: dto.questions.map((q) => ({
+          type: q.type,
+          questionText: q.questionText,
+          options:
+            q.options?.map((o) => ({
+              text: o.text,
+              isCorrect: !!o.isCorrect,
+            })) ?? [],
+        })),
+      };
+
+      await this.quizzesRepository.updateQuizWithQuestions(id, payload);
+
+      const updatedQuiz = await this.getQuizById(id);
+      if (!updatedQuiz) {
+        throw new InternalServerErrorException('Updated quiz not found');
+      }
+
+      return updatedQuiz;
+    } catch (error) {
+      console.error('Service error:', error);
+      throw new InternalServerErrorException(
+        'Failed to update quiz: ' + error.message,
+      );
+    }
   }
 }

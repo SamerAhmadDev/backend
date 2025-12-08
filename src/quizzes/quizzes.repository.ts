@@ -1,8 +1,7 @@
-import { Quiz } from './entities/quizzes.entity';
-// src/quizzes/repository/quizzes-supabase.repository.ts
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PaginationOptions, SortOptions } from 'src/common/interfaces';
 import { SupabaseService } from '../supabase/supabase.service';
+import { Quiz, QuizWithRelations } from './entities/quizzes.entity';
 
 @Injectable()
 export class QuizzesRepository {
@@ -45,15 +44,26 @@ export class QuizzesRepository {
     return { quizzes: data as Quiz[], total: count ?? 0 };
   }
 
-  async getQuizById(id: string): Promise<Quiz | null> {
+  async getQuizById(id: string): Promise<QuizWithRelations | null> {
     const { data, error } = await this.supabase.client
       .from('quizzes')
-      .select('*')
+      .select(
+        `
+      *,
+      questions:quiz_questions (
+        *,
+        options:quiz_question_options (*)
+      )
+    `,
+      )
       .eq('id', id)
       .maybeSingle();
 
-    if (error) throw new InternalServerErrorException(error.message);
-    return data;
+    if (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return data as QuizWithRelations | null;
   }
 
   async deleteQuiz(id: string): Promise<void> {
@@ -65,13 +75,47 @@ export class QuizzesRepository {
     if (dbError) throw new InternalServerErrorException(dbError.message);
   }
 
-  async createQuiz(payload): Promise<string> {
+  async createQuiz(payload: {
+    title: string;
+    passingScore?: number;
+    questions: {
+      type: 'mcq' | 'true_false';
+      questionText: string;
+      options?: { text: string; isCorrect: boolean }[];
+    }[];
+  }): Promise<string> {
     const { data, error } = await this.supabase.client.rpc('create_full_quiz', {
       payload,
     });
 
-    if (error) throw new InternalServerErrorException(error.message);
+    if (error) {
+      console.error('RPC error (create):', error);
+      throw new InternalServerErrorException(error.message);
+    }
 
     return data;
+  }
+
+  async updateQuizWithQuestions(
+    id: string,
+    payload: {
+      title: string;
+      passingScore?: number;
+      questions: {
+        type: 'mcq' | 'true_false';
+        questionText: string;
+        options?: { text: string; isCorrect: boolean }[];
+      }[];
+    },
+  ): Promise<void> {
+    const { error } = await this.supabase.client.rpc('update_full_quiz', {
+      p_quiz_id: id,
+      payload,
+    });
+
+    if (error) {
+      console.error('RPC error (update):', error);
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }

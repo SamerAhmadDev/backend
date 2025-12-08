@@ -11,7 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class CreateQuizQuestionOptionDto {
+export class UpdateQuizQuestionOptionDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -22,7 +22,7 @@ export class CreateQuizQuestionOptionDto {
   isCorrect: boolean;
 }
 
-export class CreateQuizQuestionDto {
+export class UpdateQuizQuestionDto {
   @ApiProperty({ enum: ['mcq', 'true_false'] })
   @IsString()
   type: 'mcq' | 'true_false';
@@ -32,15 +32,15 @@ export class CreateQuizQuestionDto {
   @IsNotEmpty()
   questionText: string;
 
-  @ApiPropertyOptional({ type: [CreateQuizQuestionOptionDto] })
+  @ApiPropertyOptional({ type: [UpdateQuizQuestionOptionDto] })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateQuizQuestionOptionDto)
-  options?: CreateQuizQuestionOptionDto[];
+  @Type(() => UpdateQuizQuestionOptionDto)
+  options?: UpdateQuizQuestionOptionDto[];
 }
 
-export class CreateQuizDto {
+export class UpdateQuizDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -52,9 +52,9 @@ export class CreateQuizDto {
   @Max(100)
   passingScore?: number;
 
-  @ApiProperty({ type: [CreateQuizQuestionDto] })
+  @ApiProperty({ type: [UpdateQuizQuestionDto] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateQuizQuestionDto)
-  questions: CreateQuizQuestionDto[];
+  @Type(() => UpdateQuizQuestionDto)
+  questions: UpdateQuizQuestionDto[];
 }

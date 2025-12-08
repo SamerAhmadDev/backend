@@ -811,12 +811,16 @@ export type Database = {
       };
       update_full_progress: {
         Args: {
-          _completed_at: string;
+          _completed_at?: string;
           _content_block_id: string;
           _course_id: string;
           _lesson_id: string;
           _student_id: string;
         };
+        Returns: undefined;
+      };
+      update_full_quiz: {
+        Args: { p_quiz_id: string; payload: Json };
         Returns: undefined;
       };
     };
