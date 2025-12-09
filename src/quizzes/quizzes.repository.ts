@@ -83,7 +83,7 @@ export class QuizzesRepository {
     title: string;
     passingScore?: number;
     questions: {
-      type: 'mcq' | 'true_false';
+      type: 'mcq' | 'true_false' | 'multi_select';
       questionText: string;
       order: number;
       options?: { text: string; isCorrect: boolean }[];
@@ -107,7 +107,7 @@ export class QuizzesRepository {
       title: string;
       passingScore?: number;
       questions: {
-        type: 'mcq' | 'true_false';
+        type: 'mcq' | 'true_false' | 'multi_select';
         questionText: string;
         order: number;
         options?: { text: string; isCorrect: boolean }[];

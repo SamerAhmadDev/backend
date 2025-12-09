@@ -24,9 +24,9 @@ export class UpdateQuizQuestionOptionDto {
 }
 
 export class UpdateQuizQuestionDto {
-  @ApiProperty({ enum: ['mcq', 'true_false'] })
+  @ApiProperty({ enum: ['mcq', 'true_false', 'multi_select'] })
   @IsString()
-  type: 'mcq' | 'true_false';
+  type: 'mcq' | 'true_false' | 'multi_select';
 
   @ApiProperty()
   @IsString()
