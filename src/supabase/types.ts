@@ -326,6 +326,100 @@ export type Database = {
           },
         ];
       };
+      quiz_question_options: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_correct: boolean;
+          option_text: string;
+          question_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_correct?: boolean;
+          option_text: string;
+          question_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_correct?: boolean;
+          option_text?: string;
+          question_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'quiz_question_options_question_id_fkey';
+            columns: ['question_id'];
+            isOneToOne: false;
+            referencedRelation: 'quiz_questions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      quiz_questions: {
+        Row: {
+          created_at: string;
+          id: string;
+          question_text: string;
+          quiz_id: string;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          question_text: string;
+          quiz_id: string;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          question_text?: string;
+          quiz_id?: string;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'quiz_questions_quiz_id_fkey';
+            columns: ['quiz_id'];
+            isOneToOne: false;
+            referencedRelation: 'quizzes';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      quizzes: {
+        Row: {
+          created_at: string;
+          id: string;
+          passing_score: number | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          passing_score?: number | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          passing_score?: number | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       school_courses: {
         Row: {
           course_id: string;
@@ -690,6 +784,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_full_quiz: { Args: { payload: Json }; Returns: string };
       create_lesson_with_blocks: {
         Args: {
           p_content_blocks: Json;
@@ -722,6 +817,10 @@ export type Database = {
           _lesson_id: string;
           _student_id: string;
         };
+        Returns: undefined;
+      };
+      update_full_quiz: {
+        Args: { p_quiz_id: string; payload: Json };
         Returns: undefined;
       };
     };
