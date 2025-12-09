@@ -63,6 +63,10 @@ export class QuizzesRepository {
       throw new InternalServerErrorException(error.message);
     }
 
+    if (data) {
+      data.questions.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    }
+
     return data as QuizWithRelations | null;
   }
 
@@ -81,6 +85,7 @@ export class QuizzesRepository {
     questions: {
       type: 'mcq' | 'true_false';
       questionText: string;
+      order: number;
       options?: { text: string; isCorrect: boolean }[];
     }[];
   }): Promise<string> {
@@ -104,6 +109,7 @@ export class QuizzesRepository {
       questions: {
         type: 'mcq' | 'true_false';
         questionText: string;
+        order: number;
         options?: { text: string; isCorrect: boolean }[];
       }[];
     },

@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -31,6 +32,11 @@ export class CreateQuizQuestionDto {
   @IsString()
   @IsNotEmpty()
   questionText: string;
+
+  @ApiProperty()
+  @IsInt()
+  @Min(0)
+  order: number;
 
   @ApiPropertyOptional({ type: [CreateQuizQuestionOptionDto] })
   @IsOptional()

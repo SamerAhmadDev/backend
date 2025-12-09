@@ -33,6 +33,7 @@ export class QuizzesService {
         questions: dto.questions.map((q) => ({
           type: q.type,
           questionText: q.questionText,
+          order: q.order,
           options:
             q.options?.map((o) => ({
               text: o.text,
@@ -61,10 +62,11 @@ export class QuizzesService {
         passingScore: dto.passingScore ?? undefined,
         questions: dto.questions.map((q) => ({
           type: q.type,
-          questionText: q.questionText,
+          questionText: (q.questionText || '').trim(),
+          order: q.order,
           options:
             q.options?.map((o) => ({
-              text: o.text,
+              text: (o.text || '').trim(),
               isCorrect: !!o.isCorrect,
             })) ?? [],
         })),
