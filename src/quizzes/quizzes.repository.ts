@@ -70,6 +70,22 @@ export class QuizzesRepository {
     return data as QuizWithRelations | null;
   }
 
+  async getAllQuizzesWithRelations(): Promise<QuizWithRelations[]> {
+    const { data, error } = await this.supabase.client.from('quizzes').select(`
+      *,
+      questions:quiz_questions (
+        *,
+        options:quiz_question_options (*)
+      )
+    `);
+
+    if (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return data as QuizWithRelations[];
+  }
+
   async deleteQuiz(id: string): Promise<void> {
     const { error: dbError } = await this.supabase.client
       .from('quizzes')

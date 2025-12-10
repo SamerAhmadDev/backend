@@ -20,6 +20,17 @@ export const GetQuizzesDocs = () =>
     }),
   );
 
+export const GetAllQuizzesWithRelations = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Retrieve quizzes with their children',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of quizzes with all their children',
+    }),
+  );
+
 export const GetQuizByIdDocs = () =>
   applyDecorators(
     ApiOperation({ summary: 'Retrieve a quiz by ID' }),

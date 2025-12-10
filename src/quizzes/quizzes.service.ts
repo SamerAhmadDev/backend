@@ -17,6 +17,10 @@ export class QuizzesService {
     return this.quizzesRepository.getQuizzes(pagination, sort, search);
   }
 
+  async getQuizzesWithRelations(): Promise<QuizWithRelations[]> {
+    return this.quizzesRepository.getAllQuizzesWithRelations();
+  }
+
   async getQuizById(id: string): Promise<QuizWithRelations | null> {
     return this.quizzesRepository.getQuizById(id);
   }

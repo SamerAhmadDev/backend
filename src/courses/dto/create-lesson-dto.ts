@@ -12,14 +12,15 @@ import {
 } from 'class-validator';
 
 export class ContentBlockDto {
-  @ApiProperty({ enum: ['text', 'video'] })
+  @ApiProperty({ enum: ['text', 'video', 'quiz'] })
   @IsNotEmpty()
   @IsString()
-  type: 'text' | 'video';
+  type: 'text' | 'video' | 'quiz';
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
-  title: string;
+  @IsOptional()
+  title?: string;
 
   @ApiPropertyOptional()
   @IsString()
@@ -30,6 +31,11 @@ export class ContentBlockDto {
   @IsString()
   @IsOptional()
   videoUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  quizId?: string;
 }
 
 export class CreateLessonDto {
