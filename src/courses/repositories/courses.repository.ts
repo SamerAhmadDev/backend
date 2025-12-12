@@ -156,7 +156,7 @@ export class CoursesRepository {
         )
       `,
       )
-      .eq('course_id', courseId)
+      .eq('id', courseId)
       .maybeSingle();
 
     if (error) {

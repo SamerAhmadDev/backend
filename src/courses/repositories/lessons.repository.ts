@@ -176,6 +176,27 @@ export class LessonsRepository {
           ...contentBlockData,
           ...videoData,
         } as ContentBlock);
+      } else if (block.type === 'quiz') {
+        if (!block.quizId) {
+          throw new BadRequestException('quizId is required for quiz blocks');
+        }
+
+        const { data: quizData, error: quizError } = await this.supabase.client
+          .from('quiz_content_blocks')
+          .insert({
+            content_block_id: contentBlockData.id,
+            quiz_id: block.quizId,
+          })
+          .select()
+          .single();
+
+        if (quizError)
+          throw new InternalServerErrorException(quizError.message);
+
+        insertedBlocks.push({
+          ...contentBlockData,
+          ...quizData,
+        } as ContentBlock);
       } else {
         throw new BadRequestException(`Invalid block type`);
       }
@@ -296,6 +317,26 @@ export class LessonsRepository {
           ...contentBlockData,
           ...videoData,
         } as ContentBlock);
+      } else if (block.type === 'quiz') {
+        if (!block.quizId)
+          throw new BadRequestException('quizId is required for quiz blocks');
+
+        const { data: quizData, error: quizError } = await this.supabase.client
+          .from('quiz_content_blocks')
+          .insert({
+            content_block_id: contentBlockData.id,
+            quiz_id: block.quizId,
+          })
+          .select()
+          .single();
+
+        if (quizError)
+          throw new InternalServerErrorException(quizError.message);
+
+        insertedBlocks.push({
+          ...contentBlockData,
+          ...quizData,
+        } as ContentBlock);
       } else {
         throw new BadRequestException(`Invalid block type`);
       }
@@ -320,7 +361,17 @@ export class LessonsRepository {
       contentBlocks:content_blocks(
         *,
         text:text_content_blocks(*),
-        video:video_content_blocks(*)
+        video:video_content_blocks(*),
+        quiz:quiz_content_blocks(
+          *,
+          quiz:quiz_id(
+            *,
+            questions:quiz_questions(
+              *,
+              options:quiz_question_options(*)
+            )
+          )
+        )
       )
     `,
       )
@@ -328,8 +379,25 @@ export class LessonsRepository {
       .maybeSingle();
 
     if (error) throw new InternalServerErrorException(error.message);
+    if (!data) return null;
 
-    return data as LessonWithBlocks;
+    const normalizedContentBlocks = data.contentBlocks.map((b) => {
+      if (b.type === 'quiz' && b.quiz) {
+        return {
+          id: b.id,
+          type: 'quiz',
+          title: b.quiz.quiz.title,
+          quizId: b.quiz.quiz_id,
+          quiz: b.quiz.quiz,
+        };
+      }
+      return b;
+    });
+
+    return {
+      ...data,
+      contentBlocks: normalizedContentBlocks,
+    } as LessonWithBlocks;
   }
 
   async getLessonHierarchyBySlug(

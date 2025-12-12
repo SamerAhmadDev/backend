@@ -326,6 +326,36 @@ export type Database = {
           },
         ];
       };
+      quiz_content_blocks: {
+        Row: {
+          content_block_id: string;
+          quiz_id: string;
+        };
+        Insert: {
+          content_block_id: string;
+          quiz_id: string;
+        };
+        Update: {
+          content_block_id?: string;
+          quiz_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'quiz_content_blocks_content_block_id_fkey';
+            columns: ['content_block_id'];
+            isOneToOne: true;
+            referencedRelation: 'content_blocks';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'quiz_content_blocks_quiz_id_fkey';
+            columns: ['quiz_id'];
+            isOneToOne: false;
+            referencedRelation: 'quizzes';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       quiz_question_options: {
         Row: {
           created_at: string;
@@ -365,6 +395,7 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          order: number | null;
           question_text: string;
           quiz_id: string;
           type: string;
@@ -373,6 +404,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
+          order?: number | null;
           question_text: string;
           quiz_id: string;
           type: string;
@@ -381,6 +413,7 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
+          order?: number | null;
           question_text?: string;
           quiz_id?: string;
           type?: string;

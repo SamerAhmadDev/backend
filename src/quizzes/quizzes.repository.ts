@@ -63,7 +63,27 @@ export class QuizzesRepository {
       throw new InternalServerErrorException(error.message);
     }
 
+    if (data) {
+      data.questions.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    }
+
     return data as QuizWithRelations | null;
+  }
+
+  async getAllQuizzesWithRelations(): Promise<QuizWithRelations[]> {
+    const { data, error } = await this.supabase.client.from('quizzes').select(`
+      *,
+      questions:quiz_questions (
+        *,
+        options:quiz_question_options (*)
+      )
+    `);
+
+    if (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return data as QuizWithRelations[];
   }
 
   async deleteQuiz(id: string): Promise<void> {
@@ -79,8 +99,9 @@ export class QuizzesRepository {
     title: string;
     passingScore?: number;
     questions: {
-      type: 'mcq' | 'true_false';
+      type: 'mcq' | 'true_false' | 'multi_select';
       questionText: string;
+      order: number;
       options?: { text: string; isCorrect: boolean }[];
     }[];
   }): Promise<string> {
@@ -102,8 +123,9 @@ export class QuizzesRepository {
       title: string;
       passingScore?: number;
       questions: {
-        type: 'mcq' | 'true_false';
+        type: 'mcq' | 'true_false' | 'multi_select';
         questionText: string;
+        order: number;
         options?: { text: string; isCorrect: boolean }[];
       }[];
     },

@@ -17,6 +17,10 @@ export class QuizzesService {
     return this.quizzesRepository.getQuizzes(pagination, sort, search);
   }
 
+  async getQuizzesWithRelations(): Promise<QuizWithRelations[]> {
+    return this.quizzesRepository.getAllQuizzesWithRelations();
+  }
+
   async getQuizById(id: string): Promise<QuizWithRelations | null> {
     return this.quizzesRepository.getQuizById(id);
   }
@@ -33,6 +37,7 @@ export class QuizzesService {
         questions: dto.questions.map((q) => ({
           type: q.type,
           questionText: q.questionText,
+          order: q.order,
           options:
             q.options?.map((o) => ({
               text: o.text,
@@ -61,10 +66,11 @@ export class QuizzesService {
         passingScore: dto.passingScore ?? undefined,
         questions: dto.questions.map((q) => ({
           type: q.type,
-          questionText: q.questionText,
+          questionText: (q.questionText || '').trim(),
+          order: q.order,
           options:
             q.options?.map((o) => ({
-              text: o.text,
+              text: (o.text || '').trim(),
               isCorrect: !!o.isCorrect,
             })) ?? [],
         })),

@@ -19,6 +19,7 @@ import { PaginationOptions, SortOptions } from 'src/common/interfaces';
 import {
   CreateQuizDocs,
   DeleteQuizDocs,
+  GetAllQuizzesWithRelations,
   GetQuizByIdDocs,
   GetQuizzesDocs,
 } from 'src/docs/quizzes/quizzes.docs';
@@ -50,6 +51,13 @@ export class AdminQuizzesController {
     };
     const sort: SortOptions = { sortBy, sortDirection };
     return this.quizzesService.getQuizzes(pagination, sort, search);
+  }
+
+  @Roles(UserRole.SuperAdmin)
+  @Get('/all')
+  @GetAllQuizzesWithRelations()
+  async getQuizzesWithRelations(): Promise<QuizWithRelations[]> {
+    return this.quizzesService.getQuizzesWithRelations();
   }
 
   @Roles(UserRole.SuperAdmin)

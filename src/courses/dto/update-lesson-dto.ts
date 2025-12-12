@@ -17,9 +17,10 @@ class UpdateContentBlockDto {
   @IsString()
   type: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  title: string;
+  title?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -30,6 +31,11 @@ class UpdateContentBlockDto {
   @IsOptional()
   @IsString()
   videoUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  quizId?: string;
 
   @ApiProperty()
   @IsNumber()
