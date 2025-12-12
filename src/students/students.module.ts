@@ -8,15 +8,18 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { AdminStudentsController } from './controllers/admin-students.controller';
 import { StudentCoursesController } from './controllers/student-courses.controller';
 import { StudentProgressController } from './controllers/student-progress.controller';
+import { StudentQuizController } from './controllers/student-quiz.controller';
 import { StudentsController } from './controllers/students.controller';
 import { StudentContentBlockProgressRepository } from './repositories/student-content-block-progress.repository';
 import { StudentCourseProgressRepository } from './repositories/student-course-progress.repository';
 import { StudentCoursesRepository } from './repositories/student-courses.repository';
 import { StudentLessonProgressRepository } from './repositories/student-lesson-progress.repository';
+import { StudentQuizRepository } from './repositories/student-quiz.repository';
 import { StudentsRepository } from './repositories/students.repository';
 import { AdminStudentsService } from './services/admin-students.service';
 import { StudentCoursesService } from './services/student-courses.service';
 import { StudentProgressService } from './services/student-progress.service';
+import { StudentQuizService } from './services/student-quiz.service';
 import { StudentsService } from './services/students.service';
 
 @Module({
@@ -26,12 +29,14 @@ import { StudentsService } from './services/students.service';
     StudentsController,
     StudentCoursesController,
     StudentProgressController,
+    StudentQuizController,
   ],
   providers: [
     StudentsService,
     StudentCoursesService,
     StudentProgressService,
     AdminStudentsService,
+    StudentQuizService,
 
     FileUploadService,
     JwtService,
@@ -39,6 +44,7 @@ import { StudentsService } from './services/students.service';
     CoursesRepository,
     LessonsRepository,
     StudentsRepository,
+    StudentQuizRepository,
     StudentCoursesRepository,
     CourseModulesRepository,
     StudentLessonProgressRepository,

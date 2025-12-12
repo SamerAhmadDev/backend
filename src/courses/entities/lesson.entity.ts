@@ -1,4 +1,7 @@
-import { QuizWithRelations } from 'src/quizzes/entities/quizzes.entity';
+import {
+  QuizWithRelations,
+  StudentQuiz,
+} from 'src/quizzes/entities/quizzes.entity';
 import { Tables } from 'src/supabase/types';
 import { Course } from './course.entity';
 import { CourseModule } from './module.entity';
@@ -32,4 +35,5 @@ export interface ContentBlockHierarchy {
   contentBlock: ContentBlock;
   text?: TextContentBlock;
   video?: VideoContentBlock;
+  quiz?: StudentQuiz;
 }

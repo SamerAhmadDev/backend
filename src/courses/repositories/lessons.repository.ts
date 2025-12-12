@@ -407,17 +407,27 @@ export class LessonsRepository {
       .from('lessons')
       .select(
         `
+    *,
+    module:module_id(
+      id,
+      course:course_id(id, title)
+    ),
+    contentBlocks:content_blocks(
       *,
-      module:module_id(
-        id,
-        course:course_id(id, title)
-      ),
-      contentBlocks:content_blocks(
+      text:text_content_blocks(*),
+      video:video_content_blocks(*),
+      quiz:quiz_content_blocks(
         *,
-        text:text_content_blocks(*),
-        video:video_content_blocks(*)
+        quiz:quiz_id(
+          *,
+          questions:quiz_questions(
+            *,
+            options:quiz_question_options(*)
+          )
+        )
       )
-    `,
+    )
+  `,
       )
       .eq('slug', lessonSlug)
       .maybeSingle();
@@ -430,30 +440,61 @@ export class LessonsRepository {
 
     const contentBlocks: ContentBlockHierarchy[] = (
       data.contentBlocks || []
-    ).map((block: any) => ({
-      contentBlock: {
-        id: block.id,
-        lesson_id: block.lesson_id,
-        type: block.type,
-        order: block.order,
-        created_at: block.created_at,
-        updated_at: block.updated_at,
-      },
-      text: block.text
-        ? {
-            content_block_id: block.text.content_block_id,
-            title: block.text.title,
-            content: block.text.content,
-          }
-        : undefined,
-      video: block.video
-        ? {
-            content_block_id: block.video.content_block_id,
-            title: block.video.title,
-            video_url: block.video.video_url,
-          }
-        : undefined,
-    }));
+    ).map((block: any) => {
+      let quiz: any = undefined;
+
+      if (block.type === 'quiz' && block.quiz?.quiz) {
+        const quizData = block.quiz.quiz;
+
+        quiz = {
+          id: quizData.id,
+          title: quizData.title,
+          passing_score: quizData.passing_score,
+          created_at: quizData.created_at,
+          updated_at: quizData.updated_at,
+          questions: (quizData.questions || []).map((q: any) => ({
+            id: q.id,
+            quiz_id: q.quiz_id,
+            type: q.type,
+            order: q.order,
+            question_text: q.question_text,
+            created_at: q.created_at,
+            updated_at: q.updated_at,
+            options: (q.options || []).map((o: any) => ({
+              id: o.id,
+              quiz_question_id: o.question_id,
+              text: o.option_text,
+            })),
+          })),
+        };
+      }
+
+      return {
+        contentBlock: {
+          id: block.id,
+          lesson_id: block.lesson_id,
+          type: block.type,
+          order: block.order,
+          created_at: block.created_at,
+          updated_at: block.updated_at,
+        },
+        text: block.text
+          ? {
+              content_block_id: block.text.content_block_id,
+              title: block.text.title,
+              content: block.text.content,
+            }
+          : undefined,
+        video: block.video
+          ? {
+              content_block_id: block.video.content_block_id,
+              title: block.video.title,
+              video_url: block.video.video_url,
+            }
+          : undefined,
+        quiz,
+      };
+    });
 
     const {
       module: _module,
