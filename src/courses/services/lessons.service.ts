@@ -27,9 +27,6 @@ export class LessonsService {
     id: string,
     dto: UpdateLessonDto,
   ): Promise<Lesson & { contentBlocks: ContentBlock[] }> {
-    const lesson = await this.lessonsRepository.getLessonById(id);
-    if (!lesson) throw new NotFoundException('Lesson not found');
-
     const updatedLesson = await this.lessonsRepository.updateLessonWithBlocks(
       id,
       dto,

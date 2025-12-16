@@ -22,3 +22,8 @@ export type StudentQuizAttemptOutput = {
     }[];
   }[];
 };
+
+export type LatestQuizAttemptRow = {
+  quiz_id: string;
+  attempt: StudentQuizAttemptOutput;
+};

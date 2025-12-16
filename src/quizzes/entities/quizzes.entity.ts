@@ -1,3 +1,4 @@
+import { StudentQuizAttemptOutput } from 'src/students/entities/student-quiz.entity';
 import { Tables, TablesInsert } from 'src/supabase/types';
 
 export type Quiz = Tables<'quizzes'>;
@@ -20,6 +21,7 @@ export interface StudentQuiz {
   created_at: string;
   updated_at: string;
   questions: StudentQuizQuestion[];
+  latestAttempt: StudentQuizAttemptOutput | null;
 }
 
 export interface StudentQuizQuestion {

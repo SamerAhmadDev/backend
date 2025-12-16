@@ -212,23 +212,28 @@ export class LessonsRepository {
     lessonId: string,
     dto: UpdateLessonDto,
   ): Promise<Lesson & { contentBlocks: ContentBlock[] }> {
-    const { title, estimated_duration, contentBlocks } = dto;
+    const { title, estimated_duration, contentBlocks = [] } = dto;
 
-    // Ensure the lesson exists
+    // Fetch existing lesson
     const { data: existingLesson, error: existingError } =
       await this.supabase.client
         .from('lessons')
         .select('*')
         .eq('id', lessonId)
         .maybeSingle();
-
     if (existingError)
       throw new InternalServerErrorException(existingError.message);
     if (!existingLesson) throw new NotFoundException('Lesson not found');
 
-    // Update basic lesson info
-    const { data: updatedLesson, error: lessonError } =
-      await this.supabase.client
+    // Update lesson info only if needed
+    const hasLessonChanges =
+      (title !== undefined && title !== existingLesson.title) ||
+      (estimated_duration !== undefined &&
+        estimated_duration !== existingLesson.estimated_duration);
+
+    let updatedLesson = existingLesson;
+    if (hasLessonChanges) {
+      const { data, error } = await this.supabase.client
         .from('lessons')
         .update({
           title,
@@ -238,114 +243,91 @@ export class LessonsRepository {
         .eq('id', lessonId)
         .select()
         .single();
+      if (error) throw new InternalServerErrorException(error.message);
+      updatedLesson = data;
+    }
 
-    if (lessonError)
-      throw new InternalServerErrorException(lessonError.message);
-
-    // Clear old content blocks (cascade deletes text/video)
-    const { error: deleteError } = await this.supabase.client
+    // Fetch existing content blocks
+    const { data: existingBlocks } = await this.supabase.client
       .from('content_blocks')
-      .delete()
+      .select('*')
       .eq('lesson_id', lessonId);
 
-    if (deleteError)
-      throw new InternalServerErrorException(deleteError.message);
+    const resultBlocks: ContentBlock[] = [];
 
-    // Insert new content blocks
-    const insertedBlocks: ContentBlock[] = [];
+    for (let index = 0; index < contentBlocks.length; index++) {
+      const block = contentBlocks[index];
+      const existingBlock = existingBlocks?.find((b) => b.id === block.id);
 
-    const blocks = contentBlocks || [];
-    for (let index = 0; index < blocks.length; index++) {
-      const block = blocks[index];
-
-      const { data: contentBlockData, error: blockError } =
-        await this.supabase.client
-          .from('content_blocks')
-          .insert({
-            lesson_id: lessonId,
-            type: block.type,
-            order: index + 1,
-          })
-          .select()
-          .single();
-
-      if (blockError)
-        throw new InternalServerErrorException(blockError.message);
-
-      if (block.type === 'text') {
-        if (!block.content)
-          throw new BadRequestException('content is required for text blocks');
-
-        const { data: textData, error: textError } = await this.supabase.client
-          .from('text_content_blocks')
-          .insert({
-            content_block_id: contentBlockData.id,
-            title: block.title,
-            content: block.content,
-          })
-          .select()
-          .single();
-
-        if (textError)
-          throw new InternalServerErrorException(textError.message);
-
-        insertedBlocks.push({
-          ...contentBlockData,
-          ...textData,
-        } as ContentBlock);
-      } else if (block.type === 'video') {
-        if (!block.videoUrl)
-          throw new BadRequestException(
-            'videoUrl is required for video blocks',
-          );
-
-        const { data: videoData, error: videoError } =
+      if (existingBlock) {
+        // Always update type/order
+        const { data: updatedBlock, error: blockError } =
           await this.supabase.client
-            .from('video_content_blocks')
-            .insert({
-              content_block_id: contentBlockData.id,
-              title: block.title,
-              video_url: block.videoUrl,
-            })
+            .from('content_blocks')
+            .update({ type: block.type, order: index + 1 })
+            .eq('id', existingBlock.id)
             .select()
             .single();
+        if (blockError)
+          throw new InternalServerErrorException(blockError.message);
 
-        if (videoError)
-          throw new InternalServerErrorException(videoError.message);
+        // Update children
+        if (block.type === 'text') {
+          await this.supabase.client
+            .from('text_content_blocks')
+            .update({ title: block.title, content: block.content })
+            .eq('content_block_id', existingBlock.id);
+        } else if (block.type === 'video') {
+          await this.supabase.client
+            .from('video_content_blocks')
+            .update({ title: block.title, video_url: block.videoUrl })
+            .eq('content_block_id', existingBlock.id);
+        } else if (block.type === 'quiz') {
+          await this.supabase.client
+            .from('quiz_content_blocks')
+            .update({ quiz_id: block.quizId })
+            .eq('content_block_id', existingBlock.id);
+        }
 
-        insertedBlocks.push({
-          ...contentBlockData,
-          ...videoData,
-        } as ContentBlock);
-      } else if (block.type === 'quiz') {
-        if (!block.quizId)
-          throw new BadRequestException('quizId is required for quiz blocks');
-
-        const { data: quizData, error: quizError } = await this.supabase.client
-          .from('quiz_content_blocks')
-          .insert({
-            content_block_id: contentBlockData.id,
-            quiz_id: block.quizId,
-          })
-          .select()
-          .single();
-
-        if (quizError)
-          throw new InternalServerErrorException(quizError.message);
-
-        insertedBlocks.push({
-          ...contentBlockData,
-          ...quizData,
-        } as ContentBlock);
+        resultBlocks.push({ ...updatedBlock, ...block } as ContentBlock);
       } else {
-        throw new BadRequestException(`Invalid block type`);
+        // Insert new block if it doesn't exist
+        const { data: newBlock, error: insertError } =
+          await this.supabase.client
+            .from('content_blocks')
+            .insert({ lesson_id: lessonId, type: block.type, order: index + 1 })
+            .select()
+            .single();
+        if (insertError)
+          throw new InternalServerErrorException(insertError.message);
+
+        // Insert children
+        if (block.type === 'text') {
+          await this.supabase.client.from('text_content_blocks').insert([
+            {
+              content_block_id: newBlock.id,
+              title: block.title ?? '',
+              content: block.content ?? '',
+            },
+          ]);
+        } else if (block.type === 'video') {
+          await this.supabase.client.from('video_content_blocks').insert({
+            content_block_id: newBlock.id,
+            title: block.title ?? '',
+            video_url: block.videoUrl ?? '',
+          });
+        } else if (block.type === 'quiz') {
+          await this.supabase.client.from('quiz_content_blocks').insert({
+            content_block_id: newBlock.id,
+            quiz_id: block.quizId ?? '',
+          });
+        }
+
+        resultBlocks.push({ ...newBlock, ...block } as ContentBlock);
       }
     }
 
-    return {
-      ...updatedLesson,
-      contentBlocks: insertedBlocks,
-    };
+    return { ...updatedLesson, contentBlocks: resultBlocks };
   }
 
   async getLessonById(id: string): Promise<LessonWithBlocks | null> {
@@ -514,30 +496,48 @@ export class LessonsRepository {
   }
 
   async getPrevNextLessons(courseId: string, currentLessonSlug: string) {
-    const { data: lessons, error } = await this.supabase.client
+    // Step 1: fetch all modules for this course
+    const { data: modules, error: moduleError } = await this.supabase.client
+      .from('modules')
+      .select('id, order')
+      .eq('course_id', courseId);
+
+    if (moduleError) {
+      throw new InternalServerErrorException(moduleError.message);
+    }
+
+    if (!modules || modules.length === 0) {
+      return { prevLesson: undefined, nextLesson: undefined };
+    }
+
+    const moduleIds = modules.map((m) => m.id);
+
+    // Step 2: fetch lessons only from these modules
+    const { data: lessons, error: lessonError } = await this.supabase.client
       .from('lessons')
       .select(
         `
-        slug,
-        title,
+      slug,
+      title,
+      order,
+      module:module_id (
+        id,
         order,
-        module:module_id (
-          id,
-          order,
-          course_id
-        )
-      `,
+        course_id
       )
-      .eq('module.course_id', courseId);
+    `,
+      )
+      .in('module_id', moduleIds);
 
-    if (error) {
-      throw new InternalServerErrorException(error.message);
+    if (lessonError) {
+      throw new InternalServerErrorException(lessonError.message);
     }
 
     if (!lessons || lessons.length === 0) {
       return { prevLesson: undefined, nextLesson: undefined };
     }
 
+    // Step 3: sort lessons by module order, then lesson order
     const sortedLessons = lessons.sort((a, b) => {
       const moduleOrderA = a.module?.order ?? 0;
       const moduleOrderB = b.module?.order ?? 0;
@@ -552,6 +552,7 @@ export class LessonsRepository {
       return lessonOrderA - lessonOrderB;
     });
 
+    // Step 4: find current lesson index
     const index = sortedLessons.findIndex((l) => l.slug === currentLessonSlug);
 
     if (index === -1) {

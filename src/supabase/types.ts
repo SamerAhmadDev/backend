@@ -930,6 +930,13 @@ export type Database = {
         };
         Returns: undefined;
       };
+      get_latest_quiz_attempts_for_student: {
+        Args: { p_quiz_ids: string[]; p_student_id: string };
+        Returns: {
+          attempt: Json;
+          quiz_id: string;
+        }[];
+      };
       get_student_course_ids: {
         Args: { student_uuid: string };
         Returns: {
