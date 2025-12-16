@@ -11,6 +11,8 @@ export type StudentQuizAnswerInput = {
 
 export type StudentQuizAttemptOutput = {
   attempt_id: string;
+  score: number;
+  passed: boolean;
   feedback: {
     question_id: string;
     result: 'correct' | 'incorrect';
