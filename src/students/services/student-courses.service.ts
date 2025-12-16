@@ -11,6 +11,7 @@ import { StudentLessonDetails } from '../entities/student-lesson.entity';
 import { StudentContentBlockProgressRepository } from '../repositories/student-content-block-progress.repository';
 import { StudentCourseProgressRepository } from '../repositories/student-course-progress.repository';
 import { StudentLessonProgressRepository } from '../repositories/student-lesson-progress.repository';
+import { StudentQuizRepository } from '../repositories/student-quiz.repository';
 import { StudentCoursesRepository } from './../repositories/student-courses.repository';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class StudentCoursesService {
   constructor(
     private readonly lessonsRepository: LessonsRepository,
     private readonly coursesRepository: CoursesRepository,
+    private readonly studentQuizRepository: StudentQuizRepository,
     private readonly courseModulesRepository: CourseModulesRepository,
     private readonly studentCoursesRepository: StudentCoursesRepository,
     private readonly studentLessonProgressRepository: StudentLessonProgressRepository,
@@ -173,6 +175,26 @@ export class StudentCoursesService {
     ]);
 
     const lessonProgress = lessonProgressArray?.[0] ?? null;
+
+    const quizIds = lessonHierarchy.contentBlocks
+      .filter((cb) => cb.quiz)
+      .map((cb) => cb.quiz!.id);
+
+    const latestAttempts =
+      await this.studentQuizRepository.getLatestQuizAttempts(
+        studentId,
+        quizIds,
+      );
+
+    const attemptMap = new Map(
+      latestAttempts.map((a) => [a.quiz_id, a.attempt]),
+    );
+
+    lessonHierarchy.contentBlocks.forEach((cb) => {
+      if (cb.quiz) {
+        cb.quiz.latestAttempt = attemptMap.get(cb.quiz.id) ?? null;
+      }
+    });
 
     return {
       lessonHierarchy,

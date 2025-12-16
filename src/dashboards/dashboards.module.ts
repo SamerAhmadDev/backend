@@ -8,6 +8,7 @@ import { StudentContentBlockProgressRepository } from 'src/students/repositories
 import { StudentCourseProgressRepository } from 'src/students/repositories/student-course-progress.repository';
 import { StudentCoursesRepository } from 'src/students/repositories/student-courses.repository';
 import { StudentLessonProgressRepository } from 'src/students/repositories/student-lesson-progress.repository';
+import { StudentQuizRepository } from 'src/students/repositories/student-quiz.repository';
 import { StudentsRepository } from 'src/students/repositories/students.repository';
 import { StudentCoursesService } from 'src/students/services/student-courses.service';
 import { UsersRepository } from 'src/users/users.repository';
@@ -21,6 +22,7 @@ import { DashboardsService } from './dashboards.service';
     StudentCoursesService,
     LessonsRepository,
     CoursesRepository,
+    StudentQuizRepository,
     CourseModulesRepository,
     StudentCoursesRepository,
     StudentLessonProgressRepository,

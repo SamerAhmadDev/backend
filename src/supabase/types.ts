@@ -660,6 +660,108 @@ export type Database = {
           },
         ];
       };
+      student_quiz_attempt_questions: {
+        Row: {
+          answer: Json;
+          attempt_id: string;
+          correct: boolean | null;
+          created_at: string;
+          id: string;
+          question_id: string;
+          score: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          answer: Json;
+          attempt_id: string;
+          correct?: boolean | null;
+          created_at?: string;
+          id?: string;
+          question_id: string;
+          score?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          answer?: Json;
+          attempt_id?: string;
+          correct?: boolean | null;
+          created_at?: string;
+          id?: string;
+          question_id?: string;
+          score?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'student_quiz_attempt_questions_attempt_id_fkey';
+            columns: ['attempt_id'];
+            isOneToOne: false;
+            referencedRelation: 'student_quiz_attempts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'student_quiz_attempt_questions_question_id_fkey';
+            columns: ['question_id'];
+            isOneToOne: false;
+            referencedRelation: 'quiz_questions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      student_quiz_attempts: {
+        Row: {
+          attempt_number: number;
+          created_at: string;
+          id: string;
+          passed: boolean | null;
+          quiz_id: string;
+          score: number | null;
+          started_at: string | null;
+          student_id: string;
+          submitted_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          attempt_number: number;
+          created_at?: string;
+          id?: string;
+          passed?: boolean | null;
+          quiz_id: string;
+          score?: number | null;
+          started_at?: string | null;
+          student_id: string;
+          submitted_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          attempt_number?: number;
+          created_at?: string;
+          id?: string;
+          passed?: boolean | null;
+          quiz_id?: string;
+          score?: number | null;
+          started_at?: string | null;
+          student_id?: string;
+          submitted_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'student_quiz_attempts_quiz_id_fkey';
+            columns: ['quiz_id'];
+            isOneToOne: false;
+            referencedRelation: 'quizzes';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'student_quiz_attempts_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'students';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       students: {
         Row: {
           created_at: string | null;
@@ -828,6 +930,13 @@ export type Database = {
         };
         Returns: undefined;
       };
+      get_latest_quiz_attempts_for_student: {
+        Args: { p_quiz_ids: string[]; p_student_id: string };
+        Returns: {
+          attempt: Json;
+          quiz_id: string;
+        }[];
+      };
       get_student_course_ids: {
         Args: { student_uuid: string };
         Returns: {
@@ -841,6 +950,14 @@ export type Database = {
       start_student_lesson: {
         Args: { p_lesson_id: string; p_student_id: string };
         Returns: string[];
+      };
+      submit_quiz: {
+        Args: { p_answers: Json; p_quiz_id: string; p_student_id: string };
+        Returns: Json;
+      };
+      submit_quiz_attempt: {
+        Args: { p_answers: Json; p_quiz_id: string; p_student_id: string };
+        Returns: Json;
       };
       update_full_progress: {
         Args: {

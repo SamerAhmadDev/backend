@@ -1,3 +1,4 @@
+import { StudentQuizAttemptOutput } from 'src/students/entities/student-quiz.entity';
 import { Tables, TablesInsert } from 'src/supabase/types';
 
 export type Quiz = Tables<'quizzes'>;
@@ -11,4 +12,31 @@ export interface QuizWithRelations extends Quiz {
         options: QuizQuestionOptions[] | null;
       })[]
     | null;
+}
+
+export interface StudentQuiz {
+  id: string;
+  title: string;
+  passing_score: number | null;
+  created_at: string;
+  updated_at: string;
+  questions: StudentQuizQuestion[];
+  latestAttempt: StudentQuizAttemptOutput | null;
+}
+
+export interface StudentQuizQuestion {
+  id: string;
+  quiz_id: string;
+  type: string;
+  order: number | null;
+  question_text: string;
+  created_at: string;
+  updated_at: string;
+  options: StudentQuizOption[];
+}
+
+export interface StudentQuizOption {
+  id: string;
+  quiz_question_id: string;
+  text: string;
 }
