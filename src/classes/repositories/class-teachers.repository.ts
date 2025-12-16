@@ -120,13 +120,25 @@ export class ClassTeachersRepository {
   async getAvailableTeachersForClass(
     classId: string,
   ): Promise<Partial<User>[]> {
-    const { data: allTeachers, error: allTeachersErr } =
+    const { data: classData, error: classErr } = await this.supabase.client
+      .from('classes')
+      .select('id, school_id')
+      .eq('id', classId)
+      .single();
+
+    if (classErr) throw new Error(classErr.message);
+    if (!classData) throw new Error('Class not found');
+
+    const schoolId = classData.school_id;
+
+    const { data: schoolTeachers, error: schoolTeachersErr } =
       await this.supabase.client
         .from('users')
         .select('id, first_name, last_name, email, role')
-        .eq('role', UserRole.Teacher);
+        .eq('role', UserRole.Teacher)
+        .eq('school_id', schoolId);
 
-    if (allTeachersErr) throw new Error(allTeachersErr.message);
+    if (schoolTeachersErr) throw new Error(schoolTeachersErr.message);
 
     const { data: assignedTeachers, error: assignedErr } =
       await this.supabase.client
@@ -138,7 +150,7 @@ export class ClassTeachersRepository {
 
     const assignedIds = new Set(assignedTeachers.map((t) => t.teacher_id));
 
-    const availableTeachers = allTeachers.filter(
+    const availableTeachers = schoolTeachers.filter(
       (teacher) => !assignedIds.has(teacher.id),
     );
 

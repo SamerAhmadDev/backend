@@ -83,12 +83,24 @@ export class ClassStudentsRepository {
   }
 
   async getAvailableStudentsForClass(classId: string): Promise<Student[]> {
-    const { data: allStudents, error: allStudentsErr } =
+    const { data: classData, error: classErr } = await this.supabase.client
+      .from('classes')
+      .select('id, school_id')
+      .eq('id', classId)
+      .single();
+
+    if (classErr) throw new Error(classErr.message);
+    if (!classData) throw new Error('Class not found');
+
+    const schoolId = classData.school_id;
+
+    const { data: schoolStudents, error: schoolStudentsErr } =
       await this.supabase.client
         .from('students')
-        .select('*', { count: 'exact' });
+        .select('*')
+        .eq('school_id', schoolId);
 
-    if (allStudentsErr) throw new Error(allStudentsErr.message);
+    if (schoolStudentsErr) throw new Error(schoolStudentsErr.message);
 
     const { data: assignedStudents, error: assignedErr } =
       await this.supabase.client
@@ -100,7 +112,7 @@ export class ClassStudentsRepository {
 
     const assignedIds = new Set(assignedStudents.map((t) => t.student_id));
 
-    const availableStudents = allStudents.filter(
+    const availableStudents = schoolStudents.filter(
       (student) => !assignedIds.has(student.id),
     );
 

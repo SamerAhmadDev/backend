@@ -61,10 +61,28 @@ export class ClassCoursesRepository {
   async getAvailableCoursesForClass(
     classId: string,
   ): Promise<Partial<Course>[]> {
-    const { data: allCourses, error: allCoursesErr } =
-      await this.supabase.client.from('courses').select('id, title');
+    const { data: classData, error: classErr } = await this.supabase.client
+      .from('classes')
+      .select('id, school_id')
+      .eq('id', classId)
+      .single();
 
-    if (allCoursesErr) throw new Error(allCoursesErr.message);
+    if (classErr) throw new Error(classErr.message);
+    if (!classData) throw new Error('Class not found');
+
+    const schoolId = classData.school_id;
+
+    const { data: schoolCourses, error: schoolCoursesErr } =
+      await this.supabase.client
+        .from('school_courses')
+        .select('course_id')
+        .eq('school_id', schoolId);
+
+    if (schoolCoursesErr) throw new Error(schoolCoursesErr.message);
+
+    const schoolCourseIds = schoolCourses.map((sc) => sc.course_id);
+
+    if (schoolCourseIds.length === 0) return [];
 
     const { data: assignedCourses, error: assignedErr } =
       await this.supabase.client
@@ -76,7 +94,14 @@ export class ClassCoursesRepository {
 
     const assignedIds = new Set(assignedCourses.map((t) => t.course_id));
 
-    const availableCourses = allCourses.filter(
+    const { data: courses, error: coursesErr } = await this.supabase.client
+      .from('courses')
+      .select('id, title')
+      .in('id', schoolCourseIds);
+
+    if (coursesErr) throw new Error(coursesErr.message);
+
+    const availableCourses = courses.filter(
       (course) => !assignedIds.has(course.id),
     );
 
