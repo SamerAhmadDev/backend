@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { UpdateContentBlockProgressDto } from '../dto/update-content-block-progress-dto';
 import { StudentContentBlockProgress } from '../entities/student-lesson.entity';
 
 @Injectable()
@@ -24,20 +23,6 @@ export class StudentContentBlockProgressRepository {
     }
 
     return data as StudentContentBlockProgress[];
-  }
-
-  async updateContentBlockProgress(
-    studentId: string,
-    contentBlockId: string,
-    update: UpdateContentBlockProgressDto,
-  ) {
-    const { error } = await this.supabase.client
-      .from('student_content_block_progress')
-      .update(update)
-      .eq('student_id', studentId)
-      .eq('content_block_id', contentBlockId);
-
-    if (error) throw new InternalServerErrorException(error.message);
   }
 
   async getContentBlockIdsByLesson(lessonId: string): Promise<string[]> {

@@ -255,12 +255,47 @@ export class LessonsRepository {
 
     const resultBlocks: ContentBlock[] = [];
 
+    // --- DELETE REMOVED BLOCKS ---
+    const incomingBlockIds = contentBlocks.map((b) => b.id).filter(Boolean);
+    const blocksToDelete = existingBlocks?.filter(
+      (b) => !incomingBlockIds.includes(b.id),
+    );
+
+    if (blocksToDelete?.length) {
+      for (const block of blocksToDelete) {
+        // Delete children first
+        if (block.type === 'text') {
+          await this.supabase.client
+            .from('text_content_blocks')
+            .delete()
+            .eq('content_block_id', block.id);
+        } else if (block.type === 'video') {
+          await this.supabase.client
+            .from('video_content_blocks')
+            .delete()
+            .eq('content_block_id', block.id);
+        } else if (block.type === 'quiz') {
+          await this.supabase.client
+            .from('quiz_content_blocks')
+            .delete()
+            .eq('content_block_id', block.id);
+        }
+
+        // Delete the block itself
+        await this.supabase.client
+          .from('content_blocks')
+          .delete()
+          .eq('id', block.id);
+      }
+    }
+
+    // --- UPDATE EXISTING OR INSERT NEW BLOCKS ---
     for (let index = 0; index < contentBlocks.length; index++) {
       const block = contentBlocks[index];
       const existingBlock = existingBlocks?.find((b) => b.id === block.id);
 
       if (existingBlock) {
-        // Always update type/order
+        // Update type/order
         const { data: updatedBlock, error: blockError } =
           await this.supabase.client
             .from('content_blocks')
@@ -291,7 +326,7 @@ export class LessonsRepository {
 
         resultBlocks.push({ ...updatedBlock, ...block } as ContentBlock);
       } else {
-        // Insert new block if it doesn't exist
+        // Insert new block
         const { data: newBlock, error: insertError } =
           await this.supabase.client
             .from('content_blocks')
