@@ -39,6 +39,80 @@ export type Database = {
   };
   public: {
     Tables: {
+      badge_triggers: {
+        Row: {
+          badge_id: string;
+          conditions: Json | null;
+          created_at: string;
+          event_type: string;
+          id: string;
+          scope: string;
+          updated_at: string;
+        };
+        Insert: {
+          badge_id: string;
+          conditions?: Json | null;
+          created_at?: string;
+          event_type: string;
+          id?: string;
+          scope?: string;
+          updated_at?: string;
+        };
+        Update: {
+          badge_id?: string;
+          conditions?: Json | null;
+          created_at?: string;
+          event_type?: string;
+          id?: string;
+          scope?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'badge_triggers_badge_id_fkey';
+            columns: ['badge_id'];
+            isOneToOne: false;
+            referencedRelation: 'badges';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      badges: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          icon: string | null;
+          id: string;
+          metadata: Json | null;
+          name: string;
+          repeatable: boolean;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          icon?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          name: string;
+          repeatable?: boolean;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          icon?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          name?: string;
+          repeatable?: boolean;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       class_courses: {
         Row: {
           class_id: string;
